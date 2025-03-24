@@ -6,13 +6,15 @@ namespace Collections
     {
         static void Main(string[] args)
         {
+            // A List is similiar to an array 
             List<TodoItem> todoList = new List<TodoItem>();
             bool programRunning = true;
 
             while (programRunning)
             {
                 DisplayMainMenu();
-                string choice = PromptForChoice();
+                Console.Write("Enter a choice: ");
+                string choice = Console.ReadLine().ToLower();
                 switch (choice)
                 {
                     case "a":
@@ -27,14 +29,16 @@ namespace Collections
                         break;
                     case "d":
                         PrintTodoList(todoList);
+                        DisplayItemDetails(todoList);
+                        break;
+                    case "e":
+                        PrintTodoList(todoList);
+                        CompleteTodoItem(todoList);
                         break;
                     case "q":
                         programRunning = false;
                         break;
-
                 }
-
-                
             }
         }
 
@@ -46,15 +50,11 @@ namespace Collections
                 [a] Print To-Do List
                 [b] Add new item to To-Do List
                 [c] Remove item from To-Do List
-                [d] Complete Todo item
+                [d] Display details about item
+                [e] Complete Todo item
                 [q] Quit program
                 """;
             Console.WriteLine(menu);
-        }
-        static string PromptForChoice()
-        {
-            Console.Write("Enter a choice: ");
-            return Console.ReadLine().ToLower();
         }
         static void PrintTodoList(List<TodoItem> todoList)
         {
@@ -70,41 +70,6 @@ namespace Collections
                     Console.WriteLine($"{listItem}{todoList[i - 1].Completed}");
                 }
             }
-        }
-
-        static void DisplayItemDetails(List<TodoItem> todoList)
-        {
-            if (todoList.Count == 0)
-                Console.WriteLine("There are no items in the To Do list.");
-            else
-            {
-                Console.Write("For which item would you like the details? ");
-                string choice = Console.ReadLine();
-
-                bool parseSuccess = int.TryParse(choice, out int itemChoice);
-                if (!parseSuccess || itemChoice < 1 || itemChoice > todoList.Count)
-                {
-                    Console.WriteLine("That is not a valid choice. Try again.");
-                }
-                else
-                {
-                    TodoItem item = todoList[itemChoice - 1];
-                    if (string.IsNullOrWhiteSpace(item.Details))
-                    {
-                        Console.Write("There are no details for that item. Would you like to add some (y/n)? ");
-                        string addDetailsChoice = Console.ReadLine();
-                        if (addDetailsChoice == "y")
-                        {
-                            item.AddDetails();
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine(item.Details);
-                    }
-                }
-            }
-            
         }
         #endregion
 
@@ -155,10 +120,72 @@ namespace Collections
                     }
                 }
             }
-
         }
 
         #endregion
 
+        #region Todo Item Methods
+
+        static void CompleteTodoItem(List<TodoItem> todoList)
+        {
+            bool continueCompleteOption = true;
+
+            while (continueCompleteOption)
+            {
+                Console.Write("Which item would you like to complete? (enter 'c' to cancel): ");
+                string choice = Console.ReadLine().ToLower();
+                if (choice == "c")
+                {
+                    continueCompleteOption = false;
+                }
+                else
+                {
+                    bool parseSuccess = int.TryParse(choice, out int itemChoice);
+                    if (!parseSuccess || itemChoice < 1 || itemChoice > todoList.Count)
+                    {
+                        Console.WriteLine("That is not a valid choice. Try again.");
+                    }
+                    else
+                    {
+                        todoList[itemChoice - 1].Completed = true;
+                        continueCompleteOption = false;
+                    }
+                }
+            }
+        }
+        static void DisplayItemDetails(List<TodoItem> todoList)
+        {
+            if (todoList.Count == 0)
+                Console.WriteLine("There are no items in the To Do list.");
+            else
+            {
+                Console.Write("For which item would you like the details? ");
+                string choice = Console.ReadLine();
+
+                bool parseSuccess = int.TryParse(choice, out int itemChoice);
+                if (!parseSuccess || itemChoice < 1 || itemChoice > todoList.Count)
+                {
+                    Console.WriteLine("That is not a valid choice. Try again.");
+                }
+                else
+                {
+                    TodoItem item = todoList[itemChoice - 1];
+                    if (string.IsNullOrWhiteSpace(item.Details))
+                    {
+                        Console.Write("There are no details for that item. Would you like to add some (y/n)? ");
+                        string addDetailsChoice = Console.ReadLine();
+                        if (addDetailsChoice == "y")
+                        {
+                            item.AddDetails();
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine(item.Details);
+                    }
+                }
+            }
+        }
+        #endregion
     }
 }
