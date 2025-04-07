@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 
 namespace Collections
 {
@@ -6,19 +7,6 @@ namespace Collections
     {
         static void Main(string[] args)
         {
-            // A List is similiar to an array, but it allows us to change the size of the collection at run time, rather
-            // than having a fixed size like with an array.
-            
-            // Creating a new list is a little different than an array. We start with the List<> data type, and inside of the angle brackets
-            // we insert the datatype of the list we are creating. We must use the "new" keyword, like with arrays, but we write the List<type> again
-            // but this time with parentheses. It is the same as with an object's constructor.
-
-            // The following program will use a List to manage a List of Todo Items (tasks to complete). It can add, update, or remove task
-            // using the functionalities available to us with a list.
-
-            // List<type>    name      new List<type>   parentheses
-            //   |            |             |           |
-            //   V            V             V           V
             List<TodoItem> todoList = new List<TodoItem>();
             bool programRunning = true;
 
@@ -27,24 +15,22 @@ namespace Collections
                 DisplayMainMenu();
                 Console.Write("Enter a choice: ");
                 string choice = Console.ReadLine().ToLower();
+
                 switch (choice)
                 {
                     case "a":
                         PrintTodoList(todoList);
                         break;
                     case "b":
-                        AddTodoItem(todoList);
+                        AddItemToList(todoList);
                         break;
                     case "c":
-                        PrintTodoList(todoList);
-                        RemoveItemFromTodoList(todoList);
+                        RemoveItemFromList(todoList);
                         break;
                     case "d":
-                        PrintTodoList(todoList);
                         DisplayItemDetails(todoList);
                         break;
                     case "e":
-                        PrintTodoList(todoList);
                         CompleteTodoItem(todoList);
                         break;
                     case "q":
@@ -53,12 +39,6 @@ namespace Collections
                 }
             }
         }
-
-        /// <summary>
-        /// Name: DisplayMainMenu
-        /// Purpose: Displays the main menu to the user.
-        /// </summary>
-        #region UI
         static void DisplayMainMenu()
         {
             string menu = """
@@ -72,169 +52,150 @@ namespace Collections
                 """;
             Console.WriteLine(menu);
         }
-        /// <summary>
-        /// Name: PrintTodoList
-        /// Purpose: Prints every item in the todo list 
-        /// </summary>
-        /// <param name="todoList">The list of todo items</param>
         static void PrintTodoList(List<TodoItem> todoList)
         {
-            // Lists have the Count property, which will return the number of items currently in the list.
             if (todoList.Count == 0)
-                Console.WriteLine("There are no items in the To Do list.");
+                Console.WriteLine("There are not items.");
             else
             {
-                Console.WriteLine("Description".PadRight(30) + "Completed");
-                Console.WriteLine("".PadRight(40,'-'));
-
-                // We start at 1, because we want to print the value of the index to the user 
                 for (int i = 0; i < todoList.Count; i++)
                 {
-                    // Lists can be indexed just like arrays.
-                    string listItem = $"{i + 1}. {todoList[i].Description}".PadRight(30);
-                    Console.WriteLine($"{listItem}{todoList[i].Completed}");
+                    Console.WriteLine($"{i + 1}. " + todoList[i].Description);
                 }
             }
         }
-        #endregion
-
-        #region Add / Remove 
-        /// <summary>
-        /// Name: AddTodoItem
-        /// Purpose: Adds a new TodoItem to the provided list.
-        /// </summary>
-        /// <param name="todoList">The list of todo items</param>
-        static void AddTodoItem(List<TodoItem> todoList)
+        static void AddItemToList(List<TodoItem> todoList)
         {
             bool validInput = false;
 
             while (!validInput)
             {
-                Console.Write("Provide a description for the new item: ");
-                string description = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(description))
-                    Console.WriteLine("Cannot enter an empty value.");
-                else if (description.Length > 20)
-                    Console.WriteLine("Description must be 20 characters or less.")
-                else
+                try
                 {
-                    TodoItem item = new TodoItem(description);
+                    TodoItem item = new TodoItem();
+                    item.Description = PromptString("Enter a description: ");
+                    item.DueDate = PromptString("Enter a date (YYYY-MM-DD): ");
+
+                    Console.Write("Would you like to add details? (y/n) ");
+                    if (Console.ReadLine().ToLower() == "y")
+                    {
+                        item.Details = PromptString("Enter details: ");
+                    }
+
+                    item.Completed = false;
+
                     todoList.Add(item);
                     validInput = true;
                 }
+                catch
+                {
+                    Console.WriteLine("Try again");
+                }
+
             }
         }
-        /// <summary>
-        /// Name: RemoveItemFromTodoList
-        /// Purpose: Removes an item from the provided todo list.
-        /// </summary>
-        /// <param name="todoList">The list of todo items</param>
-        static void RemoveItemFromTodoList(List<TodoItem> todoList)
+        static void RemoveItemFromList(List<TodoItem> todoList)
         {
-            bool continueRemoveOption = true;
+            bool continueRemovine = true;
+            PrintTodoList(todoList);
 
-            while (continueRemoveOption)
+            while (continueRemovine)
             {
-                Console.Write("Enter the number of the item you wish to remove (enter 'c' to cancel): ");
-                string choice = Console.ReadLine().ToLower();
+                string choice = PromptString("Enter number or 'c' to cancel: ");
+
                 if (choice == "c")
                 {
-                    continueRemoveOption = false;
+                    continueRemovine = false;
                 }
                 else
                 {
-                    if (ValidateTodoSelection(todoList.Count, out int itemChoice))
+                    if (ValidateTodoSelection(choice, todoList.Count, out int itemChoice))
                     {
                         todoList.RemoveAt(itemChoice - 1);
-                        continueRemoveOption = false;
+                        continueRemovine = false;
                     }
                 }
             }
         }
-
-        #endregion
-
-        #region Todo Item Methods
-        /// <summary>
-        /// Name: CompleteTodoItem
-        /// Purpose: Completes a Todo Item.
-        /// </summary>
-        /// <param name="todoList">The list of todo items</param>
-        static void CompleteTodoItem(List<TodoItem> todoList)
-        {
-            bool continueCompleteOption = true;
-
-            while (continueCompleteOption)
-            {
-                Console.Write("Which item would you like to complete? (enter 'c' to cancel): ");
-                string choice = Console.ReadLine().ToLower();
-                if (choice == "c")
-                {
-                    continueCompleteOption = false;
-                }
-                else
-                {
-                    if (ValidateTodoSelection(todoList.Count, out int itemChoice))
-                    {
-                        todoList[itemChoice - 1].Completed = true;
-                        continueCompleteOption = false;
-                    }
-                }
-            }
-        }
-        /// <summary>
-        /// Name: DisplayItemDetails
-        /// Purpose: 
-        /// </summary>
-        /// <param name="todoList">The list of todo items</param>
         static void DisplayItemDetails(List<TodoItem> todoList)
         {
-            if (todoList.Count == 0)
-                Console.WriteLine("There are no items in the To Do list.");
+            if (todoList == null || todoList.Count == 0)
+            {
+                Console.WriteLine("There are no todo items.");
+            }
             else
             {
-                Console.Write("For which item would you like the details? ");
-                if (ValidateTodoSelection(todoList.Count, out int itemChoice))
+                bool continueShowingDetails = true;
+                PrintTodoList(todoList);
+
+                while (continueShowingDetails)
                 {
-                    TodoItem item = todoList[itemChoice - 1];
-                    if (string.IsNullOrWhiteSpace(item.Details))
+                    string choice = PromptString("Enter number or 'c' to cancel: ");
+
+                    if (choice == "c")
                     {
-                        Console.Write("There are no details for that item. Would you like to add some (y/n)? ");
-                        string addDetailsChoice = Console.ReadLine();
-                        if (addDetailsChoice == "y")
-                        {
-                            item.AddDetails();
-                        }
+                        continueShowingDetails = false;
                     }
                     else
                     {
-                        Console.WriteLine(item.Details);
+                        if (ValidateTodoSelection(choice, todoList.Count, out int itemChoice))
+                        {
+                            todoList[itemChoice - 1].DisplayItemDetails();
+                        }
                     }
                 }
             }
         }
-        #endregion
 
-        #region Utils
-        /// <summary>
-        /// Name: ValidateTodoSelection
-        /// Purpose: Makes sure that the option that a user enters
-        /// when selection an option from the todo list is valid.
-        /// </summary>
-        /// <param name="todoCount">The number of items that are in the list</param>
-        /// <param name="itemChoice">The user's choice converted to an int (out param)</param>
-        /// <returns>Boolean indicating if the choice is valid.</returns>
-        static bool ValidateTodoSelection(int todoCount, out int itemChoice)
+        static void CompleteTodoItem(List<TodoItem> todoList)
         {
-            string choice = Console.ReadLine();
+            if (todoList == null || todoList.Count == 0)
+            {
+                Console.WriteLine("There are no todo items.");
+            }
+            else
+            {
+                bool continueCompletion = true;
+                PrintTodoList(todoList);
+
+                while (continueCompletion)
+                {
+                    string choice = PromptString("Enter number or 'c' to cancel: ");
+
+                    if (choice == "c")
+                    {
+                        continueCompletion = false;
+                    }
+                    else
+                    {
+                        if (ValidateTodoSelection(choice, todoList.Count, out int itemChoice))
+                        {
+                            todoList[itemChoice - 1].Completed = true;
+                            continueCompletion = false;
+                        }
+                    }
+                }
+            }
+        }
+        static string PromptString(string message)
+        {
+            string input = "";
+            while (string.IsNullOrWhiteSpace(input))
+            {
+                Console.Write(message);
+                input = Console.ReadLine();
+            }
+            return input;
+        }
+        static bool ValidateTodoSelection(string choice, int todoCount, out int itemChoice)
+        {
             bool parseSuccess = int.TryParse(choice, out itemChoice);
             if (!parseSuccess || itemChoice < 1 || itemChoice > todoCount)
             {
-                Console.WriteLine("That is not a valid choice. Try again.");
+                Console.WriteLine("Not valid choice");
                 parseSuccess = false;
             }
             return parseSuccess;
         }
-        #endregion
     }
 }
